@@ -4,37 +4,61 @@ document.addEventListener("DOMContentLoaded", () => {
     const expenseList = document.getElementById("expense-list");
     const totalAmount = document.getElementById("total-amount");
     const filterCategory = document.getElementById("filter-category");
+    const submitButton = expenseForm.querySelector('button[type="submit"]');
+    const formMessage = document.getElementById("form-message");
+    const storageKey = "expense-tracker-expenses";
 
-    let expenses = [];
+    let expenses = loadExpenses();
+    let editingExpenseId = null;
+
+    renderCurrentExpenses();
+    updateTotalAmount();
 
     expenseForm.addEventListener("submit", (e) => {
         e.preventDefault();
 
-        const name = document.getElementById("expense-name").value;
+        const name = document.getElementById("expense-name").value.trim();
         const amount = parseFloat(document.getElementById("expense-amount").value);
         const category = document.getElementById("expense-category").value;
         const date = document.getElementById("expense-date").value;
 
+        if (!name || !Number.isFinite(amount) || amount <= 0 || !category || !date) {
+            formMessage.textContent = "Enter an expense name, a positive amount, a category, and a date.";
+            return;
+        }
+
         const expense = {
-            id: Date.now(),
+            id: editingExpenseId ?? Date.now(),
             name,
             amount,
             category,
             date
         };
 
-        expenses.push(expense);
-        displayExpenses(expenses);
+        if (editingExpenseId === null) {
+            expenses.push(expense);
+        } else {
+            expenses = expenses.map(existingExpense =>
+                existingExpense.id === editingExpenseId ? expense : existingExpense
+            );
+        }
+
+        saveExpenses();
+        renderCurrentExpenses();
         updateTotalAmount();
 
         expenseForm.reset();
+        editingExpenseId = null;
+        submitButton.textContent = "Add Expense";
+        formMessage.textContent = "";
     });
 
     expenseList.addEventListener("click", (e) => {
         if (e.target.classList.contains("delete-btn")) {
             const id = parseInt(e.target.dataset.id);
             expenses = expenses.filter(expense => expense.id !== id);
-            displayExpenses(expenses);
+            saveExpenses();
+            renderCurrentExpenses();
             updateTotalAmount();
         }
 
@@ -47,21 +71,42 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("expense-category").value = expense.category;
             document.getElementById("expense-date").value = expense.date;
 
-            expenses = expenses.filter(expense => expense.id !== id);
-            displayExpenses(expenses);
-            updateTotalAmount();
+            editingExpenseId = id;
+            submitButton.textContent = "Save Changes";
         }
     });
 
-    filterCategory.addEventListener("change", (e) => {
-        const category = e.target.value;
-        if (category === "All") {
-            displayExpenses(expenses);
-        } else {
-            const filteredExpenses = expenses.filter(expense => expense.category === category);
-            displayExpenses(filteredExpenses);
-        }
+    filterCategory.addEventListener("change", () => {
+        renderCurrentExpenses();
     });
+
+    function loadExpenses() {
+        const savedExpenses = localStorage.getItem(storageKey);
+
+        if (!savedExpenses) {
+            return [];
+        }
+
+        try {
+            const parsedExpenses = JSON.parse(savedExpenses);
+            return Array.isArray(parsedExpenses) ? parsedExpenses : [];
+        } catch {
+            return [];
+        }
+    }
+
+    function saveExpenses() {
+        localStorage.setItem(storageKey, JSON.stringify(expenses));
+    }
+
+    function renderCurrentExpenses() {
+        const selectedCategory = filterCategory.value;
+        const expensesToDisplay = selectedCategory === "All"
+            ? expenses
+            : expenses.filter(expense => expense.category === selectedCategory);
+
+        displayExpenses(expensesToDisplay);
+    }
 
     function displayExpenses(expenses) {
         expenseList.innerHTML = "";
