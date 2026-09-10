@@ -1,3 +1,4 @@
+//script.js
 document.addEventListener("DOMContentLoaded", () => {
     const expenseForm = document.getElementById("expense-form");
     const expenseList = document.getElementById("expense-list");
@@ -5,15 +6,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const filterCategory = document.getElementById("filter-category");
     const submitButton = expenseForm.querySelector('button[type="submit"]');
     const formMessage = document.getElementById("form-message");
-    const apiBaseUrl = "http://localhost:3000/api";
+    const storageKey = "expense-tracker-expenses";
 
-    let expenses = [];
+    let expenses = loadExpenses();
     let editingExpenseId = null;
 
-    initializeApp();
+    renderCurrentExpenses();
+    updateTotalAmount();
+    checkApiConnection();
 
-    expenseForm.addEventListener("submit", async (event) => {
-        event.preventDefault();
+    expenseForm.addEventListener("submit", (e) => {
+        e.preventDefault();
 
         const name = document.getElementById("expense-name").value.trim();
         const amount = parseFloat(document.getElementById("expense-amount").value);
@@ -21,57 +24,48 @@ document.addEventListener("DOMContentLoaded", () => {
         const date = document.getElementById("expense-date").value;
 
         if (!name || !Number.isFinite(amount) || amount <= 0 || !category || !date) {
-            formMessage.textContent =
-                "Enter an expense name, a positive amount, a category, and a date.";
+            formMessage.textContent = "Enter an expense name, a positive amount, a category, and a date.";
             return;
         }
 
-        const expense = { name, amount, category, date };
+        const expense = {
+            id: editingExpenseId ?? Date.now(),
+            name,
+            amount,
+            category,
+            date
+        };
 
-        try {
-            if (editingExpenseId === null) {
-                await requestApi("/expenses", {
-                    method: "POST",
-                    body: JSON.stringify(expense)
-                });
-            } else {
-                await requestApi(`/expenses/${editingExpenseId}`, {
-                    method: "PUT",
-                    body: JSON.stringify(expense)
-                });
-            }
-
-            await loadExpenses();
-            expenseForm.reset();
-            editingExpenseId = null;
-            submitButton.textContent = "Add Expense";
-            formMessage.textContent = "";
-        } catch (error) {
-            formMessage.textContent = error.message;
+        if (editingExpenseId === null) {
+            expenses.push(expense);
+        } else {
+            expenses = expenses.map(existingExpense =>
+                existingExpense.id === editingExpenseId ? expense : existingExpense
+            );
         }
+
+        saveExpenses();
+        renderCurrentExpenses();
+        updateTotalAmount();
+
+        expenseForm.reset();
+        editingExpenseId = null;
+        submitButton.textContent = "Add Expense";
+        formMessage.textContent = "";
     });
 
-    expenseList.addEventListener("click", async (event) => {
-        if (event.target.classList.contains("delete-btn")) {
-            const id = Number(event.target.dataset.id);
-
-            try {
-                await requestApi(`/expenses/${id}`, {
-                    method: "DELETE"
-                });
-
-                await loadExpenses();
-                formMessage.textContent = "";
-            } catch (error) {
-                formMessage.textContent = error.message;
-            }
+    expenseList.addEventListener("click", (e) => {
+        if (e.target.classList.contains("delete-btn")) {
+            const id = parseInt(e.target.dataset.id);
+            expenses = expenses.filter(expense => expense.id !== id);
+            saveExpenses();
+            renderCurrentExpenses();
+            updateTotalAmount();
         }
 
-        if (event.target.classList.contains("edit-btn")) {
-            const id = Number(event.target.dataset.id);
-            const expense = expenses.find(
-                existingExpense => existingExpense.id === id
-            );
+        if (e.target.classList.contains("edit-btn")) {
+            const id = parseInt(e.target.dataset.id);
+            const expense = expenses.find(expense => expense.id === id);
 
             document.getElementById("expense-name").value = expense.name;
             document.getElementById("expense-amount").value = expense.amount;
@@ -87,41 +81,40 @@ document.addEventListener("DOMContentLoaded", () => {
         renderCurrentExpenses();
     });
 
-    async function initializeApp() {
-        await loadExpenses();
-    }
-
-    async function loadExpenses() {
-        try {
-            expenses = await requestApi("/expenses");
-            renderCurrentExpenses();
-            updateTotalAmount();
-        } catch (error) {
-            formMessage.textContent =
-                `Could not load expenses: ${error.message}`;
-        }
-    }
-
-    async function requestApi(path, options = {}) {
-        const response = await fetch(`${apiBaseUrl}${path}`, {
-            headers: {
-                "Content-Type": "application/json"
-            },
-            ...options
-        });
-
-        const responseData = response.status === 204
-            ? null
-            : await response.json();
+    async function checkApiConnection() {
+    try {
+        const response = await fetch("http://localhost:3000/api/expenses");
 
         if (!response.ok) {
-            throw new Error(
-                responseData.message ||
-                `Request failed with status ${response.status}.`
-            );
+            throw new Error(`API request failed with status ${response.status}`);
         }
 
-        return responseData;
+        const apiExpenses = await response.json();
+
+        console.log("API connection successful.");
+        console.log("Expenses received from API:", apiExpenses);
+    } catch (error) {
+        console.error("Could not connect to the API:", error);
+    }
+}
+
+    function loadExpenses() {
+        const savedExpenses = localStorage.getItem(storageKey);
+
+        if (!savedExpenses) {
+            return [];
+        }
+
+        try {
+            const parsedExpenses = JSON.parse(savedExpenses);
+            return Array.isArray(parsedExpenses) ? parsedExpenses : [];
+        } catch {
+            return [];
+        }
+    }
+
+    function saveExpenses() {
+        localStorage.setItem(storageKey, JSON.stringify(expenses));
     }
 
     function renderCurrentExpenses() {
@@ -133,10 +126,9 @@ document.addEventListener("DOMContentLoaded", () => {
         displayExpenses(expensesToDisplay);
     }
 
-    function displayExpenses(expensesToDisplay) {
-        expenseList.replaceChildren();
-
-        expensesToDisplay.forEach(expense => {
+     function displayExpenses(expenses) {
+        expenseList.innerHTML = "";
+        expenses.forEach(expense => {
             const row = document.createElement("tr");
 
             row.append(
@@ -175,11 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function updateTotalAmount() {
-        const total = expenses.reduce(
-            (sum, expense) => sum + expense.amount,
-            0
-        );
-
+        const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
         totalAmount.textContent = total.toFixed(2);
     }
 });
