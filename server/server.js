@@ -1,28 +1,14 @@
 const express = require("express");
 const cors = require("cors");
+const pool = require("./db");
+
+
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
 app.use(cors());
-
-const expenses = [
-    {
-        id: 1,
-        name: "Lunch",
-        amount: 250,
-        category: "Food",
-        date: "2026-09-09"
-    },
-    {
-        id: 2,
-        name: "Bus fare",
-        amount: 30,
-        category: "Transport",
-        date: "2026-09-09"
-    }
-];
 
 function validateExpense(expense) {
     const { name, amount, category, date } = expense ?? {};
@@ -50,98 +36,149 @@ app.get("/api/health", (request, response) => {
     });
 });
 
-app.get("/api/expenses", (request, response) => {
-    response.status(200).json(expenses);
+app.get("/api/expenses", async (request, response) => {
+    try {
+        const result = await pool.query(`
+            SELECT
+                id,
+                name,
+                amount,
+                category,
+                expense_date AS date,
+                created_at
+            FROM expenses
+            ORDER BY id DESC
+        `);
+
+        response.status(200).json(result.rows);
+    } catch (error) {
+        console.error("Error fetching expenses:", error);
+        response.status(500).json({
+            error: "Failed to fetch expenses"
+        });
+    }
 });
 
-app.post("/api/expenses", (request, response) => {
-    const validationMessage = validateExpense(request.body);
+app.post("/api/expenses", async (request, response) => {
+    try {
+        const { name, amount, category, date } = request.body;
 
-    if (validationMessage) {
-        return response.status(400).json({
-            message: validationMessage
+        const validationError = validateExpense({
+            name,
+            amount,
+            category,
+            date
+        });
+
+        if (validationError) {
+            return response.status(400).json({
+                error: validationError
+            });
+        }
+
+        const result = await pool.query(
+            `
+            INSERT INTO expenses
+                (name, amount, category, expense_date)
+            VALUES
+                ($1, $2, $3, $4)
+            RETURNING
+                id,
+                name,
+                amount,
+                category,
+                expense_date AS date,
+                created_at
+            `,
+            [name.trim(), amount, category.trim(), date]
+        );
+
+        response.status(201).json(result.rows[0]);
+    } catch (error) {
+        console.error("Error creating expense:", error);
+        response.status(500).json({
+            error: "Failed to create expense"
         });
     }
-
-    const { name, amount, category, date } = request.body;
-
-    const nextId = expenses.length === 0
-        ? 1
-        : Math.max(...expenses.map(expense => expense.id)) + 1;
-
-    const newExpense = {
-        id: nextId,
-        name: name.trim(),
-        amount,
-        category,
-        date
-    };
-
-    expenses.push(newExpense);
-
-    return response.status(201).json(newExpense);
 });
 
-app.put("/api/expenses/:id", (request, response) => {
-    const expenseId = Number(request.params.id);
+app.put("/api/expenses/:id", async (request, response) => {
+    try {
+        const { id } = request.params;
+        const { name, amount, category, date } = request.body;
 
-    if (!Number.isInteger(expenseId)) {
-        return response.status(400).json({
-            message: "Expense ID must be a valid number."
+        const validationError = validateExpense({
+            name,
+            amount,
+            category,
+            date
+        });
+
+        if (validationError) {
+            return response.status(400).json({
+                error: validationError
+            });
+        }
+
+        const result = await pool.query(
+            `
+            UPDATE expenses
+            SET
+                name = $1,
+                amount = $2,
+                category = $3,
+                expense_date = $4
+            WHERE id = $5
+            RETURNING
+                id,
+                name,
+                amount,
+                category,
+                expense_date AS date,
+                created_at
+            `,
+            [name.trim(), amount, category.trim(), date, id]
+        );
+
+        if (result.rows.length === 0) {
+            return response.status(404).json({
+                error: "Expense not found"
+            });
+        }
+
+        response.status(200).json(result.rows[0]);
+    } catch (error) {
+        console.error("Error updating expense:", error);
+        response.status(500).json({
+            error: "Failed to update expense"
         });
     }
-
-    const expense = expenses.find(
-        expense => expense.id === expenseId
-    );
-
-    if (!expense) {
-        return response.status(404).json({
-            message: "Expense not found."
-        });
-    }
-
-    const validationMessage = validateExpense(request.body);
-
-    if (validationMessage) {
-        return response.status(400).json({
-            message: validationMessage
-        });
-    }
-
-    const { name, amount, category, date } = request.body;
-
-    expense.name = name.trim();
-    expense.amount = amount;
-    expense.category = category;
-    expense.date = date;
-
-    return response.status(200).json(expense);
 });
 
-app.delete("/api/expenses/:id", (request, response) => {
-    const expenseId = Number(request.params.id);
+app.delete("/api/expenses/:id", async (request, response) => {
+    try {
+        const { id } = request.params;
 
-    if (!Number.isInteger(expenseId)) {
-        return response.status(400).json({
-            message: "Expense ID must be a valid number."
+        const result = await pool.query(
+            "DELETE FROM expenses WHERE id = $1",
+            [id]
+        );
+
+        if (result.rowCount === 0) {
+            return response.status(404).json({
+                error: "Expense not found"
+            });
+        }
+
+        response.status(204).send();
+    } catch (error) {
+        console.error("Error deleting expense:", error);
+        response.status(500).json({
+            error: "Failed to delete expense"
         });
     }
-
-    const expenseIndex = expenses.findIndex(
-        expense => expense.id === expenseId
-    );
-
-    if (expenseIndex === -1) {
-        return response.status(404).json({
-            message: "Expense not found."
-        });
-    }
-
-    expenses.splice(expenseIndex, 1);
-
-    return response.status(204).send();
 });
+
 
 app.use((error, request, response, next) => {
     if (error.type === "entity.parse.failed") {
