@@ -114,3 +114,32 @@ form button:hover {
         text-align: left;
     }
 }
+
+.auth-intro {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.app-header,
+.account-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.secondary-button {
+    background-color: #6c757d;
+}
+
+.secondary-button:hover {
+    background-color: #5c636a;
+}
+
+@media (max-width: 600px) {
+    .app-header,
+    .account-actions {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
