@@ -68,10 +68,15 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (event.target.classList.contains("edit-btn")) {
-            const id = Number(event.target.dataset.id);
+            const id = event.target.dataset.id;
             const expense = expenses.find(
-                existingExpense => existingExpense.id === id
+                existingExpense => String(existingExpense.id) === id
             );
+
+            if(!expense){
+                formMessage.textContent = "Expense not found. Refresh and try again.";
+                return;
+            }
 
             document.getElementById("expense-name").value = expense.name;
             document.getElementById("expense-amount").value = expense.amount;

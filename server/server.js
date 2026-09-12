@@ -29,20 +29,38 @@ function validateExpense(expense) {
         : null;
 }
 
-app.get("/api/health", (request, response) => {
-    response.status(200).json({
-        status: "ok",
-        message: "Expense Tracker API is running"
-    });
+function getExpenseId(id) {
+    const expenseId = Number(id);
+
+    return Number.isSafeInteger(expenseId) && expenseId > 0
+        ? expenseId
+        : null;
+}
+
+app.get("/api/health", async (request, response) => {
+    try {
+        await pool.query("SELECT 1");
+
+        return response.status(200).json({
+            status: "ok",
+            database: "connected"
+        });
+    } catch (error) {
+        console.error("Database health check failed:", error);
+
+        return response.status(503).json({
+            message: "Database is unavailable."
+        });
+    }
 });
 
 app.get("/api/expenses", async (request, response) => {
     try {
         const result = await pool.query(`
             SELECT
-                id,
+                id::TEXT AS id,
                 name,
-                amount,
+                amount::DOUBLE PRECISION AS amount,
                 category,
                 expense_date AS date,
                 created_at
@@ -54,7 +72,7 @@ app.get("/api/expenses", async (request, response) => {
     } catch (error) {
         console.error("Error fetching expenses:", error);
         response.status(500).json({
-            error: "Failed to fetch expenses"
+            message: "Failed to fetch expenses."
         });
     }
 });
@@ -72,7 +90,7 @@ app.post("/api/expenses", async (request, response) => {
 
         if (validationError) {
             return response.status(400).json({
-                error: validationError
+                message: validationError
             });
         }
 
@@ -83,9 +101,9 @@ app.post("/api/expenses", async (request, response) => {
             VALUES
                 ($1, $2, $3, $4)
             RETURNING
-                id,
+                id::TEXT AS id,
                 name,
-                amount,
+                amount::DOUBLE PRECISION AS amount,
                 category,
                 expense_date AS date,
                 created_at
@@ -97,15 +115,21 @@ app.post("/api/expenses", async (request, response) => {
     } catch (error) {
         console.error("Error creating expense:", error);
         response.status(500).json({
-            error: "Failed to create expense"
+            message: "Failed to create expense."
         });
     }
 });
 
 app.put("/api/expenses/:id", async (request, response) => {
     try {
-        const { id } = request.params;
+        const expenseId = getExpenseId(request.params.id);
         const { name, amount, category, date } = request.body;
+
+        if (expenseId === null) {
+            return response.status(400).json({
+                message: "Expense ID must be a positive whole number."
+            });
+        }
 
         const validationError = validateExpense({
             name,
@@ -116,7 +140,7 @@ app.put("/api/expenses/:id", async (request, response) => {
 
         if (validationError) {
             return response.status(400).json({
-                error: validationError
+                message: validationError
             });
         }
 
@@ -130,19 +154,19 @@ app.put("/api/expenses/:id", async (request, response) => {
                 expense_date = $4
             WHERE id = $5
             RETURNING
-                id,
+                id::TEXT AS id,
                 name,
-                amount,
+                amount::DOUBLE PRECISION AS amount,
                 category,
                 expense_date AS date,
                 created_at
             `,
-            [name.trim(), amount, category.trim(), date, id]
+            [name.trim(), amount, category.trim(), date, expenseId]
         );
 
         if (result.rows.length === 0) {
             return response.status(404).json({
-                error: "Expense not found"
+                message: "Expense not found."
             });
         }
 
@@ -150,23 +174,29 @@ app.put("/api/expenses/:id", async (request, response) => {
     } catch (error) {
         console.error("Error updating expense:", error);
         response.status(500).json({
-            error: "Failed to update expense"
+            message: "Failed to update expense."
         });
     }
 });
 
 app.delete("/api/expenses/:id", async (request, response) => {
     try {
-        const { id } = request.params;
+        const expenseId = getExpenseId(request.params.id);
+
+        if (expenseId === null) {
+            return response.status(400).json({
+                message: "Expense ID must be a positive whole number."
+            });
+        }
 
         const result = await pool.query(
             "DELETE FROM expenses WHERE id = $1",
-            [id]
+            [expenseId]
         );
 
         if (result.rowCount === 0) {
             return response.status(404).json({
-                error: "Expense not found"
+                message: "Expense not found."
             });
         }
 
@@ -174,7 +204,7 @@ app.delete("/api/expenses/:id", async (request, response) => {
     } catch (error) {
         console.error("Error deleting expense:", error);
         response.status(500).json({
-            error: "Failed to delete expense"
+            message: "Failed to delete expense."
         });
     }
 });
