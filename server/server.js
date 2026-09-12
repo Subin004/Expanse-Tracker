@@ -1,14 +1,16 @@
 const express = require("express");
 const cors = require("cors");
 const pool = require("./db");
-
-
-
+const authRoutes = require("./routes/authRoutes");
+const requireAuth = require("./middleware/requireAuth");
 const app = express();
 const PORT = 3000;
 
+
 app.use(express.json());
 app.use(cors());
+app.use("/api/auth", authRoutes);
+app.use("/api/expenses", requireAuth);
 
 function validateExpense(expense) {
     const { name, amount, category, date } = expense ?? {};
@@ -65,8 +67,9 @@ app.get("/api/expenses", async (request, response) => {
                 expense_date AS date,
                 created_at
             FROM expenses
+            WHERE user_id = $1
             ORDER BY id DESC
-        `);
+        `, [request.userId]);
 
         response.status(200).json(result.rows);
     } catch (error) {
@@ -97,9 +100,9 @@ app.post("/api/expenses", async (request, response) => {
         const result = await pool.query(
             `
             INSERT INTO expenses
-                (name, amount, category, expense_date)
+                (name, amount, category, expense_date, user_id)
             VALUES
-                ($1, $2, $3, $4)
+                ($1, $2, $3, $4, $5)
             RETURNING
                 id::TEXT AS id,
                 name,
@@ -108,7 +111,7 @@ app.post("/api/expenses", async (request, response) => {
                 expense_date AS date,
                 created_at
             `,
-            [name.trim(), amount, category.trim(), date]
+            [name.trim(), amount, category.trim(), date, request.userId]
         );
 
         response.status(201).json(result.rows[0]);
@@ -152,7 +155,7 @@ app.put("/api/expenses/:id", async (request, response) => {
                 amount = $2,
                 category = $3,
                 expense_date = $4
-            WHERE id = $5
+            WHERE id = $5 and user_id = $6
             RETURNING
                 id::TEXT AS id,
                 name,
@@ -161,7 +164,7 @@ app.put("/api/expenses/:id", async (request, response) => {
                 expense_date AS date,
                 created_at
             `,
-            [name.trim(), amount, category.trim(), date, expenseId]
+            [name.trim(), amount, category.trim(), date, expenseId, request.userId]
         );
 
         if (result.rows.length === 0) {
@@ -190,8 +193,8 @@ app.delete("/api/expenses/:id", async (request, response) => {
         }
 
         const result = await pool.query(
-            "DELETE FROM expenses WHERE id = $1",
-            [expenseId]
+            "DELETE FROM expenses WHERE id = $1 AND user_id = $2",
+            [expenseId, request.userId]
         );
 
         if (result.rowCount === 0) {
