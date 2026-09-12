@@ -4,11 +4,24 @@ const pool = require("./db");
 const authRoutes = require("./routes/authRoutes");
 const requireAuth = require("./middleware/requireAuth");
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    "http://localhost",
+    "capacitor://localhost"
+].filter(Boolean);
 
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin(origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+
+        return callback(new Error("Request origin is not allowed."));
+    }
+}));
 app.use("/api/auth", authRoutes);
 app.use("/api/expenses", requireAuth);
 

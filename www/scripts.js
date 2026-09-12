@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const apiBaseUrl = "http://localhost:3000/api";
+    const apiBaseUrl = window.APP_CONFIG?.apiBaseUrl || "http://localhost:3000/api";
     const tokenStorageKey = "expense-tracker-token";
     const emailStorageKey = "expense-tracker-email";
 
