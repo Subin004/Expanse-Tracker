@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insights | Expense Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <main class="container">
+        <h1>Expense Tracker</h1>
+        <nav class="app-nav" aria-label="Main navigation">
+            <a href="index.html">Tracker</a>
+            <a href="calendar.html">Calendar</a>
+            <a href="analytics.html" aria-current="page">Insights</a>
+        </nav>
+
+        <section class="analytics-section" aria-labelledby="analytics-title">
+            <div class="analytics-header">
+                <h2 id="analytics-title">Spending Insights</h2>
+                <div class="analytics-controls">
+                    <label for="analytics-month">Reference month <input id="analytics-month" type="month"></label>
+                    <label for="analytics-period">
+                        Trend view
+                        <select id="analytics-period">
+                            <option value="day">Day</option>
+                            <option value="week">Week</option>
+                            <option value="month" selected>Month</option>
+                            <option value="year">Year</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+
+            <div class="analytics-summary">
+                <article class="analytics-card"><span>All-time spending</span><strong id="analytics-total">₹0.00</strong></article>
+                <article class="analytics-card"><span>Highest category</span><strong id="top-category">No expenses yet</strong></article>
+                <article class="analytics-card"><span>Expenses recorded</span><strong id="expense-count">0</strong></article>
+            </div>
+
+            <div class="chart-card">
+                <h3 id="trend-title">Monthly spending trend</h3>
+                <p id="trend-range" class="trend-range"></p>
+                <div id="trend-chart" class="trend-chart" role="img" aria-live="polite"></div>
+            </div>
+
+            <div class="chart-card">
+                <h3>Category breakdown</h3>
+                <div id="category-chart" class="category-chart" role="img" aria-live="polite"></div>
+            </div>
+        </section>
+    </main>
+    <script src="analytics.js"></script>
+</body>
+</html>

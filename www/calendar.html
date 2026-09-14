@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar | Expense Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <main class="container">
+        <h1>Expense Tracker</h1>
+        <nav class="app-nav" aria-label="Main navigation">
+            <a href="index.html">Tracker</a>
+            <a href="calendar.html" aria-current="page">Calendar</a>
+            <a href="analytics.html">Insights</a>
+        </nav>
+
+        <section class="calendar-section" aria-labelledby="calendar-title">
+            <div class="calendar-header">
+                <h2 id="calendar-title">Expense Calendar</h2>
+                <div class="calendar-actions">
+                    <button type="button" id="previous-month" aria-label="Previous month">Previous</button>
+                    <strong id="calendar-month" aria-live="polite"></strong>
+                    <button type="button" id="next-month" aria-label="Next month">Next</button>
+                </div>
+            </div>
+            <div class="calendar-weekdays" aria-hidden="true">
+                <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+            </div>
+            <div id="calendar-days" class="calendar-days" role="grid" aria-label="Expense calendar"></div>
+            <div class="calendar-selection">
+                <span id="selected-date-label" aria-live="polite">Choose a date to see its expenses</span>
+                <button type="button" id="clear-date-filter">Clear Selection</button>
+            </div>
+        </section>
+
+        <section class="selected-expenses" aria-labelledby="selected-expenses-title">
+            <h2 id="selected-expenses-title">Expenses for selected date</h2>
+            <ul id="selected-expense-list" class="selected-expense-list"></ul>
+        </section>
+    </main>
+    <script src="calendar.js"></script>
+</body>
+</html>

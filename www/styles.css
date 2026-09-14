@@ -20,6 +20,39 @@ h1 {
     margin-bottom: 20px;
 }
 
+.app-nav {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 6px;
+    background: #f1f6f2;
+    border: 1px solid #dce7df;
+    border-radius: 8px;
+}
+
+.app-nav a {
+    flex: 1;
+    padding: 10px 8px;
+    color: #1f6f32;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+.app-nav a:hover,
+.app-nav a:focus-visible {
+    color: #fff;
+    background: #218838;
+    outline: none;
+}
+
+.app-nav a[aria-current="page"] {
+    color: #fff;
+    background: #218838;
+}
+
 form {
     display: flex;
     flex-wrap: wrap;
@@ -104,6 +137,283 @@ form button:hover {
     color: #b42318;
 }
 
+.calendar-section {
+    margin: 24px 0;
+}
+
+.calendar-header,
+.calendar-actions,
+.calendar-selection {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.calendar-header h2 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.calendar-weekdays,
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+.calendar-weekdays {
+    margin-top: 14px;
+    color: #666;
+    font-size: 12px;
+    text-align: center;
+}
+
+.calendar-days {
+    margin-top: 6px;
+}
+
+.calendar-day,
+.calendar-empty {
+    aspect-ratio: 1;
+}
+
+.calendar-day {
+    position: relative;
+    padding: 0;
+    color: #222;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.calendar-day:hover {
+    background: #f0f7f2;
+}
+
+.calendar-day.has-expenses::after {
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    width: 6px;
+    height: 6px;
+    content: "";
+    background: #28a745;
+    border-radius: 50%;
+    transform: translateX(-50%);
+}
+
+.calendar-day.is-selected {
+    color: #fff;
+    background: #218838;
+    border-color: #218838;
+}
+
+.calendar-day.is-selected.has-expenses::after {
+    background: #fff;
+}
+
+.calendar-selection {
+    margin-top: 12px;
+}
+
+.calendar-selection button,
+.calendar-actions button {
+    padding: 8px 10px;
+    color: #222;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.selected-expenses {
+    margin-top: 28px;
+}
+
+.selected-expenses h2 {
+    margin-bottom: 12px;
+    font-size: 20px;
+}
+
+.selected-expense-list {
+    display: grid;
+    gap: 8px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.selected-expense-list li {
+    padding: 12px;
+    background: #f8faf8;
+    border: 1px solid #dce7df;
+    border-radius: 6px;
+}
+
+.selected-expense-list .empty-list-message {
+    color: #5c665f;
+}
+
+.analytics-section {
+    margin: 28px 0;
+}
+
+.analytics-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.analytics-header h2,
+.chart-card h3 {
+    margin: 0;
+}
+
+.analytics-header label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.analytics-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.analytics-controls label {
+    white-space: nowrap;
+}
+
+.analytics-header select {
+    padding: 7px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.analytics-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 14px 0;
+}
+
+.analytics-card,
+.chart-card {
+    padding: 14px;
+    background: #f8faf8;
+    border: 1px solid #dce7df;
+    border-radius: 6px;
+}
+
+.analytics-card span {
+    display: block;
+    color: #5c665f;
+    font-size: 13px;
+}
+
+.analytics-card strong {
+    display: block;
+    margin-top: 6px;
+    font-size: 18px;
+    overflow-wrap: anywhere;
+}
+
+.chart-card + .chart-card {
+    margin-top: 14px;
+}
+
+.trend-range {
+    margin: 6px 0 0;
+    color: #5c665f;
+    font-size: 13px;
+}
+
+.trend-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    min-height: 190px;
+    margin-top: 16px;
+    padding: 0 4px 4px;
+    overflow-x: auto;
+    border-bottom: 1px solid #cfd8d1;
+}
+
+.trend-column {
+    display: flex;
+    flex: 0 0 40px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 0;
+    height: 185px;
+}
+
+.trend-value {
+    margin-bottom: 5px;
+    color: #3f4c43;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.trend-bar {
+    width: min(34px, 80%);
+    min-height: 4px;
+    background: #218838;
+    border-radius: 4px 4px 0 0;
+}
+
+.trend-label {
+    width: 100%;
+    margin-top: 7px;
+    overflow: hidden;
+    color: #5c665f;
+    font-size: 10px;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.category-chart {
+    display: grid;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.category-row {
+    display: grid;
+    grid-template-columns: minmax(70px, 110px) 1fr auto;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+}
+
+.category-track {
+    height: 10px;
+    overflow: hidden;
+    background: #e2e9e4;
+    border-radius: 999px;
+}
+
+.category-bar {
+    height: 100%;
+    background: #218838;
+    border-radius: inherit;
+}
+
+.empty-chart-message {
+    margin: auto;
+    color: #5c665f;
+    font-size: 14px;
+}
+
 @media (max-width: 600px) {
     .container {
         margin: 20px 12px;
@@ -112,6 +422,38 @@ form button:hover {
 
     .filter, .total-amount {
         text-align: left;
+    }
+
+    .calendar-header,
+    .calendar-actions,
+  .calendar-selection,
+  .analytics-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+  .analytics-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .analytics-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+    .app-nav {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    .app-nav a {
+        padding: 11px 4px;
+        font-size: 12px;
+    }
+
+    .trend-chart {
+        gap: 5px;
     }
 }
 

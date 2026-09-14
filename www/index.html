@@ -10,65 +10,13 @@
 
 <body>
     <div class="container">
-        <section id="auth-section">
-            <h1>Expense Tracker</h1>
-            <p class="auth-intro">
-                Create an account or log in to manage your personal expenses.
-            </p>
+        <h1>Expense Tracker</h1>
 
-            <form id="auth-form">
-                <label class="sr-only" for="auth-email">Email address</label>
-                <input
-                    type="email"
-                    id="auth-email"
-                    placeholder="Email address"
-                    autocomplete="email"
-                    required
-                />
-
-                <label class="sr-only" for="auth-password">Password</label>
-                <input
-                    type="password"
-                    id="auth-password"
-                    placeholder="Password (8+ characters)"
-                    autocomplete="current-password"
-                    minlength="8"
-                    required
-                />
-
-                <button type="submit">Log In</button>
-                <button
-                    type="button"
-                    id="register-button"
-                    class="secondary-button"
-                >
-                    Create Account
-                </button>
-
-                <p
-                    id="auth-message"
-                    class="form-message"
-                    role="alert"
-                    aria-live="polite"
-                ></p>
-            </form>
-        </section>
-
-        <section id="tracker-section" hidden>
-            <div class="app-header">
-                <h1>Expense Tracker</h1>
-
-                <div class="account-actions">
-                    <span id="current-user"></span>
-                    <button
-                        type="button"
-                        id="logout-button"
-                        class="secondary-button"
-                    >
-                        Log Out
-                    </button>
-                </div>
-            </div>
+            <nav class="app-nav" aria-label="Main navigation">
+                <a href="index.html" aria-current="page">Tracker</a>
+                <a href="calendar.html">Calendar</a>
+                <a href="analytics.html">Insights</a>
+            </nav>
 
             <form id="expense-form">
                 <label class="sr-only" for="expense-name">Expense name</label>
@@ -148,10 +96,8 @@
                     <option value="Other">Other</option>
                 </select>
             </div>
-        </section>
     </div>
 
-    <script src="config.js"></script>
     <script src="scripts.js"></script>
 </body>
 
